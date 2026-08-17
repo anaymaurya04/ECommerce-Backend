@@ -8,25 +8,26 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/users")
 public class UserController {
     @Autowired
     private UserService userService;
-    @GetMapping("/api/users")
+    @GetMapping
     public ResponseEntity<List<User>> getAllUsers(){
         return ResponseEntity.ok(userService.fetchAllUsers());
     }
-    @GetMapping("/api/users/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable long id){
         return userService.fetchUser(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-    @PostMapping("/api/users")
+    @PostMapping
     public ResponseEntity<Void> createUser(@RequestBody User user){
         userService.addUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
-    @PutMapping("/api/users/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<String> updateUser(@RequestBody User updatedUser, @PathVariable long id){
         boolean updated = userService.updateUser(id, updatedUser);
         if (updated) {
