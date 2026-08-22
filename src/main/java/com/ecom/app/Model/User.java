@@ -16,9 +16,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
     private String firstName;
-    public String lastName;
+    private String lastName;
     private String email;
-    private Long phoneNo;
+    private String phoneNo;
     private UserRole role = UserRole.CUSTOMER;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -27,7 +27,7 @@ public class User {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
-    
+
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 }

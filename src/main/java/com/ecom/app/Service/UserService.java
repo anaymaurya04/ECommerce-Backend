@@ -1,5 +1,8 @@
 package com.ecom.app.Service;
 
+import com.ecom.app.DTO.AddressDTO;
+import com.ecom.app.DTO.UserRequest;
+import com.ecom.app.DTO.UserResponse;
 import com.ecom.app.Model.User;
 import com.ecom.app.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -7,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -15,16 +19,20 @@ public class UserService {
     //private List<User> userList = new ArrayList<>();
     private Long nextId = 1L;
 
-    public List<User> fetchAllUsers(){
-         return userRepository.findAll();
+    public List<UserResponse> fetchAllUsers(){
+         return userRepository.findAll().stream()
+                 .map(this::mapToUserResponse)
+                 .collect(Collectors.toList());
     }
-    public void addUser(User user){
-//        user.setId(nextId++);
+    public void addUser(UserRequest userRequest){
+        User user = new User();
+        updateUserFromRequest(user, userRequest);
         userRepository.save(user);
     }
 
-    public Optional<User> fetchUser(Long id) {
-        return userRepository.findById(id);
+    public Optional<UserResponse> fetchUser(Long id) {
+        return userRepository.findById(id)
+                .map(this::mapToUserResponse);
     }
 
 
@@ -36,5 +44,31 @@ public class UserService {
                 return true;
                 }).orElse(false);
 
+    }
+    private void updateUserFromRequest(User user, UserRequest userRequest) {
+        user.setFirstName(userRequest.getFirstName());
+        user.setLastName(userRequest.getLastName());
+        user.setEmail(userRequest.getEmail());
+        user.setPhoneNo(userRequest.getPhoneNo());
+    }
+
+    private UserResponse mapToUserResponse(User user){
+        UserResponse userResponse = new UserResponse();
+        userResponse.setId(String.valueOf(user.getId()));
+        userResponse.setFirstName(user.getFirstName());
+        userResponse.setLastName(user.getLastName());
+        userResponse.setEmail(user.getEmail());
+        userResponse.setPhoneNo(user.getPhoneNo());
+        userResponse.setUserRole(user.getRole());
+        if (user.getAddress() != null){
+            AddressDTO addressDTO = new AddressDTO();
+            addressDTO.setStreet(user.getAddress().getStreet());
+            addressDTO.setCity(user.getAddress().getCity());
+            addressDTO.setState(user.getAddress().getState());
+            addressDTO.setCountry(user.getAddress().getCountry());
+            addressDTO.setZipcode(user.getAddress().getZipcode());
+            userResponse.setAddress(addressDTO);
+        }
+        return userResponse;
     }
 }
