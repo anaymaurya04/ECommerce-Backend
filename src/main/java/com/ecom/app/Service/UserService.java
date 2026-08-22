@@ -1,10 +1,10 @@
-package com.ecom.app;
+package com.ecom.app.Service;
 
-import io.micrometer.observation.ObservationFilter;
+import com.ecom.app.Model.User;
+import com.ecom.app.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
