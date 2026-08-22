@@ -3,6 +3,7 @@ package com.ecom.app.Service;
 import com.ecom.app.DTO.AddressDTO;
 import com.ecom.app.DTO.UserRequest;
 import com.ecom.app.DTO.UserResponse;
+import com.ecom.app.Model.Address;
 import com.ecom.app.Model.User;
 import com.ecom.app.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,10 +37,10 @@ public class UserService {
     }
 
 
-    public boolean updateUser(long id, User updatedUser){
+    public boolean updateUser(long id, UserRequest updateUserRequest){
         return userRepository.findById(id)
-                .map(existingUser -> {existingUser.setFirstName(updatedUser.getFirstName());
-                existingUser.setLastName(updatedUser.getLastName());
+                .map(existingUser -> {
+                    updateUserFromRequest(existingUser, updateUserRequest);
                 userRepository.save(existingUser);
                 return true;
                 }).orElse(false);
@@ -50,6 +51,15 @@ public class UserService {
         user.setLastName(userRequest.getLastName());
         user.setEmail(userRequest.getEmail());
         user.setPhoneNo(userRequest.getPhoneNo());
+        if(userRequest.getAddress() != null){
+            Address address = new Address();
+            address.setStreet(userRequest.getAddress().getStreet());
+            address.setCity(userRequest.getAddress().getCity());
+            address.setCountry(userRequest.getAddress().getCountry());
+            address.setState(userRequest.getAddress().getState());
+            address.setZipcode(userRequest.getAddress().getZipcode());
+            user.setAddress(address);
+        }
     }
 
     private UserResponse mapToUserResponse(User user){

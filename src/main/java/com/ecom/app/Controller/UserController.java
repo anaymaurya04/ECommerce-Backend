@@ -32,8 +32,8 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateUser(@RequestBody User updatedUser, @PathVariable long id){
-        boolean updated = userService.updateUser(id, updatedUser);
+    public ResponseEntity<String> updateUser(@RequestBody UserRequest updateUserRequest, @PathVariable long id){
+        boolean updated = userService.updateUser(id, updateUserRequest);
         if (updated) {
             return ResponseEntity.ok("User updated successfully");
 
