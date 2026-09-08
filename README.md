@@ -4,7 +4,7 @@ A backend e-commerce application built with **Spring Boot**, developed increment
 
 ## Status
 
-**In Progress** — User management is fully built out on top of a real persistence layer, and Product APIs are being expanded.
+**In Progress** — User management, Product APIs, Cart system, and Order system are fully built out on top of a real persistence layer.
 
 ---
 
@@ -28,7 +28,7 @@ The project follows a classic layered architecture:
 Client
   │
   ▼
-Controller  (/api/users, /api/products)
+Controller  (/api/users, /api/products, /api/cart, /api/orders)
   │
   ▼
 Service     (business logic, DTO <-> Entity mapping)
@@ -61,12 +61,34 @@ Requests enter through DTOs, are handled by the service layer, mapped to JPA ent
 * Full **DTO architecture** (`UserRequest`, `UserResponse`, `AddressDTO`) separating API payloads from entities
 * Persistence via `UserRepository` (Spring Data JPA)
 
-### Product Management 🚧
+### Product Management ✅
 
 * `Product` entity designed for e-commerce (name, description, price as `BigDecimal`, quantity, category, image URL, active flag, audit timestamps)
 * Persisted via `ProductRepository`
 * Create product endpoint (`POST`)
 * Update product endpoint (`PUT`)
+* Fetch all active products (`GET`)
+* Delete product (soft delete by setting `active = false`)
+* Search products by keyword (case-insensitive, name matching)
+* Advanced query with `@Query` annotation
+
+### Shopping Cart ✅
+
+* **Add to Cart** — validates product exists, checks stock availability, merges quantity if item already in cart
+* **Get Cart** — returns all items in a user's cart with product details
+* **Remove from Cart** — removes a specific product from the cart
+* `CartItem` entity with user, product, quantity, and price snapshot
+* `CartItemRepository` with custom queries for user+product lookup
+
+### Order System ✅
+
+* **Place Order** — end-to-end flow: validates user, checks cart isn't empty, verifies stock for each item, decrements product inventory, creates order with line items, clears cart
+* **Get User Orders** — lists all orders for a user
+* **Get Order by ID** — fetch a specific order (only if it belongs to the user)
+* `Order` entity with user, items, total amount, status, and timestamps
+* `OrderItem` entity linking each line item to a product with quantity and price snapshot
+* `OrderStatus` enum: PENDING → CONFIRMED → SHIPPED → DELIVERED (or CANCELLED)
+* Transactional order placement — if anything fails, nothing persists
 
 ## REST API
 
@@ -99,10 +121,13 @@ Example create/update payload:
 
 ### Products
 
-| Method | Endpoint                | Description          |
-|--------|--------------------------|----------------------|
-| POST   | `/api/products`         | Create product       |
-| PUT    | `/api/products/{id}`    | Update product       |
+| Method | Endpoint                  | Description                          |
+|--------|---------------------------|--------------------------------------|
+| GET    | `/api/products`           | Fetch all active products            |
+| GET    | `/api/products/search?keyword=` | Search products by keyword     |
+| POST   | `/api/products`           | Create product                       |
+| PUT    | `/api/products/{id}`      | Update product                       |
+| DELETE | `/api/products/{id}`      | Soft delete product (set inactive)   |
 
 Example payload:
 
@@ -117,30 +142,81 @@ Example payload:
 }
 ```
 
+### Cart
+
+| Method | Endpoint              | Description              |
+|--------|-----------------------|--------------------------|
+| POST   | `/api/cart`           | Add item to cart         |
+| GET    | `/api/cart`           | Get all cart items       |
+| DELETE | `/api/cart/{productId}` | Remove item from cart  |
+
+All cart endpoints require an `X-User-ID` header.
+
+Add to cart payload:
+
+```json
+{
+  "product_id": 1,
+  "quantity": 2
+}
+```
+
+### Orders
+
+| Method | Endpoint           | Description              |
+|--------|--------------------|--------------------------|
+| POST   | `/api/orders`      | Place an order           |
+| GET    | `/api/orders`      | Get all user orders      |
+| GET    | `/api/orders/{id}` | Get specific order       |
+
+All order endpoints require an `X-User-ID` header.
+
+Place order payload:
+
+```json
+{
+  "shippingAddress": "123 Main St, Springfield, IL 62704"
+}
+```
+
 ## Project Structure
 
 ```text
 src/main/java/com/ecom/app/
 ├── Controller/
 │   ├── UserController.java
-│   └── ProductController.java
+│   ├── ProductController.java
+│   ├── CartController.java
+│   └── OrderController.java
 ├── Service/
 │   ├── UserService.java
-│   └── ProductService.java
+│   ├── ProductService.java
+│   ├── CartService.java
+│   └── OrderService.java
 ├── Repository/
 │   ├── UserRepository.java
-│   └── ProductRepository.java
+│   ├── ProductRepository.java
+│   ├── CartItemRepository.java
+│   └── OrderRepository.java
 ├── Model/
 │   ├── User.java
 │   ├── Address.java
 │   ├── UserRole.java
-│   └── Product.java
+│   ├── Product.java
+│   ├── CartItem.java
+│   ├── Order.java
+│   ├── OrderItem.java
+│   └── OrderStatus.java
 └── DTO/
     ├── UserRequest.java
     ├── UserResponse.java
     ├── AddressDTO.java
     ├── ProductRequest.java
-    └── ProductResponse.java
+    ├── ProductResponse.java
+    ├── CartItemRequest.java
+    ├── OrderRequest.java
+    ├── OrderResponse.java
+    └── OrderItemResponse.java
 ```
 
 ## Database
@@ -209,24 +285,15 @@ The API is served at `http://localhost:8080`.
 * [x] Migrating to DTO Architecture
 * [x] Product Entity Design (Ecommerce)
 * [x] Building Product APIs — create & update endpoints
+* [x] Advanced Product APIs & Enhancements (fetch all, fetch by id, delete, search)
+* [x] Implementing User Cart System
+* [x] Add to Cart API (Business Logic)
+* [x] Remove from Cart API
+* [x] Fetch Cart API (User Session Handling)
+* [x] Order Entity & Repository Design
+* [x] Place Order API (End-to-End Flow)
 
 ### Up Next 🚀
-
-#### Products
-
-* [ ] Advanced Product APIs & Enhancements (remaining CRUD: fetch all, fetch by id, delete)
-
-#### Shopping Cart
-
-* [ ] Implementing User Cart System
-* [ ] Add to Cart API (Business Logic)
-* [ ] Remove from Cart API
-* [ ] Fetch Cart API (User Session Handling)
-
-#### Orders
-
-* [ ] Order Entity & Repository Design
-* [ ] Place Order API (End-to-End Flow)
 
 #### Monitoring — Spring Boot Actuator
 
@@ -261,4 +328,4 @@ This project focuses on developing practical understanding of:
 
 **Work in Progress**
 
-Core user functionality is complete on top of a real persistence layer; product APIs, cart, orders, and observability features are being added step by step. This README is updated as each milestone lands.
+Core user functionality, product APIs, cart system, and order system are complete on top of a real persistence layer; observability features are next. This README is updated as each milestone lands.
